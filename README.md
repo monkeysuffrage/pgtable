@@ -1,5 +1,5 @@
 PGTable
-A 'Pretty Good' activerecord style db abstraction for php.
+A 'Pretty Good' activerecord style db abstraction lib for php.
 =========
 Php version >= 5.3.0 is required.
 ```php
