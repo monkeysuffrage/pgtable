@@ -1,7 +1,10 @@
 PGTable
-A 'Pretty Good' activerecord style db abstraction lib for php.
+A 'Pretty Good' activerecord style mysql abstraction lib for php.
 =========
-Php version >= 5.3.0 is required.
+Requirements:
+- Php version >= 5.3.0
+- Mysql (No mysqli or PDO requirement)
+
 ```php
 require 'pgtable.php';
 
