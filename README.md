@@ -4,6 +4,7 @@ A 'pretty good' activerecord style mysql abstraction lib for php.
 Requirements:
 - Php version >= 5.3.0
 - Mysql (No mysqli or PDO requirement)
+- Tables must bave an id primary key as int auto_increment
 
 ```php
 require 'pgtable.php';
