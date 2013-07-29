@@ -16,6 +16,7 @@ abstract class PGTable{
       case 'double':
         return sprintf("`%s`=%d", mysql_real_escape_string($key), mysql_real_escape_string($value));
       case 'string': return sprintf("`%s`='%s'", mysql_real_escape_string($key), mysql_real_escape_string($value));
+      case 'boolean': return sprintf("`%s`=%d", mysql_real_escape_string($key), ($value ? 1 : 0));
       case 'NULL': return sprintf("`%s`=null", mysql_real_escape_string($key));
       default: die("unknown type: $value - " . gettype($value));
     }
@@ -108,7 +109,10 @@ abstract class PGTable{
       $vals[] = $this->sprintf_key_value($key, $value);
     }
     $sql = "update " . static::$table_name . " set " . implode(', ', $vals). " where id=".$this->attributes['id'];
-    mysql_query($sql) or die('Invalid query: ' . mysql_error());
+    if(!mysql_query($sql)){
+      echo $sql . "\n";
+      die('Invalid query: ' . mysql_error());
+    }
   }
 
 }
