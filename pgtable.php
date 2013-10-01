@@ -1,25 +1,29 @@
 <?php
 
 abstract class PGTable{
-  var $attributes;
+  var $attributes, $id;
   protected static $conn = null;
   protected static $table_name = null;
 
-  function __construct($agent_id = null){
-    $this->attributes = array();
+  function __construct($initArray = array()){
+    $this->attributes = $initArray;
   }
 
   // private functions
-  private function sprintf_key_value($key, $value){
+  private static function sprintf_value($value){
     switch(gettype($value)){
       case 'integer':
       case 'double':
-        return sprintf("`%s`=%d", mysql_real_escape_string($key), mysql_real_escape_string($value));
-      case 'string': return sprintf("`%s`='%s'", mysql_real_escape_string($key), mysql_real_escape_string($value));
-      case 'boolean': return sprintf("`%s`=%d", mysql_real_escape_string($key), ($value ? 1 : 0));
-      case 'NULL': return sprintf("`%s`=null", mysql_real_escape_string($key));
+        return sprintf("%d", mysql_real_escape_string($value));
+      case 'string': return sprintf("'%s'", mysql_real_escape_string($value));
+      case 'boolean': return sprintf("%d", ($value ? 1 : 0));
+      case 'NULL': return 'null';
       default: die("unknown type: $value - " . gettype($value));
     }
+  }
+
+  private static function sprintf_key_value($key, $value){
+    return sprintf("`%s`=%s", mysql_real_escape_string($key), self::sprintf_value($value));
   }
 
   // static functions
@@ -96,19 +100,30 @@ abstract class PGTable{
     foreach($attributes as $key => $value){
       $this->attributes[$key] = $value;
     }
+    if(isset($attributes['id'])) $this->id = $attributes['id'];
   }
 
   public function save(){
-    if(!isset($this->attributes['id'])){
-      mysql_query("insert into " . static::$table_name . " (id) values (0)") or die('Invalid query: ' . mysql_error());
-      $this->attributes['id'] = mysql_insert_id();
+    if(!isset($this->id)){
+      $keys = array('`id`');
+      $vals = array(0);
+      foreach($this->attributes as $key => $value){
+        if($key == 'id') continue;
+        $keys[] = '`' . mysql_real_escape_string($key) . '`';
+        $vals[] = self::sprintf_value($value);
+
+      }
+      $sql = "insert into " . static::$table_name . " (" . implode(', ', $keys). ") values (" . implode(', ', $vals). ")";
+      mysql_query($sql) or die('Invalid query: ' . mysql_error());
+      $this->attributes['id'] = $this->id = mysql_insert_id();
+      return;
     }
     $vals = array();
     foreach($this->attributes as $key => $value){
       if($key == 'id') continue;
-      $vals[] = $this->sprintf_key_value($key, $value);
+      $vals[] = self::sprintf_key_value($key, $value);
     }
-    $sql = "update " . static::$table_name . " set " . implode(', ', $vals). " where id=".$this->attributes['id'];
+    $sql = "update " . static::$table_name . " set " . implode(', ', $vals). " where id=" . $this->id;
     if(!mysql_query($sql)){
       echo $sql . "\n";
       die('Invalid query: ' . mysql_error());
